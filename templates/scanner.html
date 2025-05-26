@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ProXDefend - File Scanner</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --dark-bg: #0d1117;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --text-primary: #ffffff;
+            --text-secondary: #8b949e;
+            --danger-color: #f85149;
+            --success-color: #238636;
+            --warning-color: #d29922;
+            --btn-outline-color: #ffffff;
+            --accent-color: #58a6ff;
+        }
+        
+        body { 
+            background-color: var(--dark-bg); 
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body.light-mode {
+    --dark-bg: #f8f9fa;
+    --card-bg: #ffffff;
+    --border-color: #dee2e6;
+    --text-primary: #212529;
+    --text-secondary: #495057;
+    --btn-outline-color: #212529;
+    --accent-color: #0d6efd;
+    color: var(--text-primary);
+}
+
+body.light-mode .card-body,
+body.light-mode .stats-number,
+body.light-mode p,
+body.light-mode td,
+body.light-mode .form-control,
+body.light-mode .stats-label {
+    color: var(--text-primary) !important;
+}
+
+body.light-mode .text-secondary {
+    color: var(--text-secondary) !important;
+}
+        
+        body.light-mode .lead,
+        body.light-mode .text-secondary,
+        body.light-mode .card-header,
+        body.light-mode .card-body {
+            color: #212529 !important;
+        }
+        
+        .header { 
+            margin: 1rem 0;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background-color: rgba(22, 27, 34, 0.8);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        body.light-mode .card-header {
+            background-color: rgba(248, 249, 250, 0.8);
+        }
+        
+        .table {
+            color: var(--text-primary);
+            margin-bottom: 0;
+        }
+        
+        .table-dark {
+            background-color: var(--card-bg);
+        }
+        
+        body.light-mode .table-dark {
+            background-color: var(--card-bg);
+        }
+        
+        .table > :not(caption) > * > * {
+            background-color: transparent;
+            border-bottom-color: var(--border-color);
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        body.light-mode .table-hover tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .badge {
+            font-weight: 500;
+            padding: 0.4em 0.8em;
+        }
+        
+        .suspicious { 
+            background-color: rgba(248, 81, 73, 0.1) !important; 
+        }
+        
+        body.light-mode .suspicious {
+            background-color: rgba(248, 81, 73, 0.05) !important;
+        }
+        
+        .stats-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color: var(--text-primary); /* Ensure readable text */
+}
+        
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stats-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .refresh-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .refresh-button:hover {
+            transform: scale(1.1);
+            background-color: #0b5ed7;
+        }
+        
+        .refresh-button i {
+            font-size: 1.2rem;
+        }
+        
+        .refresh-button.spinning i {
+            animation: spin 1s linear infinite;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(13, 17, 23, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--border-color);
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+        
+        .back-button:hover {
+            transform: scale(1.1);
+            color: var(--text-primary);
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        body.light-mode .theme-toggle i::before {
+            content: "\F1D1";
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .form-control {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        .form-control:focus {
+            background-color: var(--card-bg);
+            border-color: var(--accent-color);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25);
+        }
+        
+        .btn-outline-light {
+            color: var(--btn-outline-color);
+            border-color: var(--btn-outline-color);
+        }
+        
+        .btn-outline-light:hover {
+            background-color: var(--btn-outline-color);
+            color: var(--dark-bg);
+        }
+        
+        .text-info {
+            color: var(--accent-color) !important;
+        }
+        
+        .text-secondary {
+            color: var(--text-secondary) !important;
+        }
+        
+        #cacheInfo {
+            display: none;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        body.light-mode #cacheInfo {
+            color: var(--text-secondary);
+        }
+        
+        .scan-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 6px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+        
+        .scan-result h5 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .scan-result p {
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        
+        .scan-result .badge {
+            margin-left: 0.5rem;
+        }
+        
+        .cache-info {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .cache-info i {
+            margin-right: 0.5rem;
+            color: var(--accent-color);
+        }
+
+        .form-label {
+            color: var(--text-primary);
+        }
+
+        .speed-test-container label {
+            color: var(--text-primary);
+        }
+
+        .speed-test-container #download-speed,
+        .speed-test-container #upload-speed {
+            color: var(--text-primary);
+        }
+
+        .card-header h6 {
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- Back Button -->
+    <a href="/" class="back-button" title="Back to Home">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+        <i class="bi bi-moon-stars"></i>
+    </button>
+    
+    <div class="container">
+        <div class="text-center header">
+            <h1 class="display-5 fw-bold text-info">🛡️ File Scanner</h1>
+            <p class="lead text-secondary">Upload and scan files for potential threats</p>
+        </div>
+
+        <!-- File Upload Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-upload me-2"></i>File Upload
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" action="/scanner" method="post" enctype="multipart/form-data">
+                    <div class="upload-area" id="dropZone">
+                        <div class="upload-icon">
+                            <i class="bi bi-cloud-upload"></i>
+                        </div>
+                        <h4>Drag & Drop files here</h4>
+                        <p class="text-secondary">or</p>
+                        <input type="file" name="file" id="fileInput" class="d-none" accept="*/*">
+                        <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                            <i class="bi bi-folder2-open me-2"></i>Browse Files
+                        </button>
+                        <div id="selectedFileName" class="mt-2 text-info" style="display:none;"></div>
+                        <button type="submit" id="scanBtn" class="btn btn-success mt-3" style="display:none;">
+                            <i class="bi bi-shield-check me-2"></i>Scan File
+                        </button>
+                        <p class="text-secondary mt-2">Maximum file size: 10MB</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Scan Results Card -->
+        {% if scan_result %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Enhanced Scan Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-file-earmark-text me-2"></i>File Information</h6>
+                        <table class="table table-dark">
+                            <tr>
+                                <td>Filename:</td>
+                                <td>{{ scan_result.filename }}</td>
+                            </tr>
+                            <tr>
+                                <td>File Type:</td>
+                                <td>{{ scan_result.file_type }}</td>
+                            </tr>
+                            <tr>
+                                <td>File Size:</td>
+                                <td>{{ scan_result.file_size }}</td>
+                            </tr>
+                            <tr>
+                                <td>File Hash:</td>
+                                <td><code>{{ scan_result.file_hash }}</code></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-search me-2"></i>Scan Details</h6>
+                        <div class="alert {% if 'Malicious' in scan_result.verdict %}alert-danger{% elif 'Suspicious' in scan_result.verdict %}alert-warning{% elif 'Clean' in scan_result.verdict %}alert-success{% else %}alert-info{% endif %}">
+                            <strong>Verdict:</strong> {{ scan_result.verdict }}
+                        </div>
+                        {% if scan_result.found_patterns %}
+                        <div class="alert alert-warning">
+                            <strong><i class="bi bi-exclamation-triangle me-2"></i>Detected Patterns:</strong>
+                            <ul class="mb-0">
+                                {% for pattern in scan_result.found_patterns %}
+                                <li>
+                                    {% if pattern == 'high_entropy' %}
+                                    <i class="bi bi-graph-up me-2"></i>High Entropy Content
+                                    {% elif pattern == 'javascript' %}
+                                    <i class="bi bi-code-square me-2"></i>JavaScript Content
+                                    {% elif pattern == 'macro' %}
+                                    <i class="bi bi-file-earmark-code me-2"></i>VBA Macros
+                                    {% elif pattern == 'embedded_files' %}
+                                    <i class="bi bi-file-earmark me-2"></i>Embedded Files
+                                    {% elif pattern == 'open_action' %}
+                                    <i class="bi bi-play-circle me-2"></i>Suspicious Open Action
+                                    {% elif pattern == 'embedded_objects' %}
+                                    <i class="bi bi-file-earmark me-2"></i>Embedded Objects
+                                    {% else %}
+                                    <i class="bi bi-shield-exclamation me-2"></i>{{ pattern|replace('_', ' ')|title }}
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        {% if scan_result.scan_details %}
+                        <div class="alert alert-info">
+                            <strong><i class="bi bi-info-circle me-2"></i>Analysis Details:</strong>
+                            <ul class="mb-0">
+                                {% for detail in scan_result.scan_details %}
+                                <li>{{ detail }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if 'PDF' in scan_result.file_type %}
+                <div class="mt-3">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-file-pdf me-2"></i>PDF Analysis</h6>
+                        <p class="mb-0">This PDF file has been analyzed for:</p>
+                        <ul>
+                            <li><i class="bi bi-check2 me-2"></i>Text content and suspicious patterns</li>
+                            <li><i class="bi bi-check2 me-2"></i>JavaScript and embedded content</li>
+                            <li><i class="bi bi-check2 me-2"></i>File structure and entropy analysis</li>
+                            <li><i class="bi bi-check2 me-2"></i>Suspicious actions and triggers</li>
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if 'msword' in scan_result.file_type or 'wordprocessingml' in scan_result.file_type %}
+                <div class="mt-3">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-file-word me-2"></i>Document Analysis</h6>
+                        <p class="mb-0">This document has been analyzed for:</p>
+                        <ul>
+                            <li><i class="bi bi-check2 me-2"></i>Text content and suspicious patterns</li>
+                            <li><i class="bi bi-check2 me-2"></i>VBA macros and embedded content</li>
+                            <li><i class="bi bi-check2 me-2"></i>File structure and entropy analysis</li>
+                            <li><i class="bi bi-check2 me-2"></i>Suspicious objects and triggers</li>
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Directory Changes Section -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-folder me-2"></i>Directory Changes</h5>
+                <small class="text-secondary" id="lastCheckTime"></small>
+            </div>
+            <div class="card-body">
+                <div id="directoryChanges">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const uploadForm = document.getElementById('uploadForm');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const selectedFileName = document.getElementById('selectedFileName');
+            const scanBtn = document.getElementById('scanBtn');
+            
+            // Hide loading overlay initially
+            loadingOverlay.classList.remove('active');
+            
+            // Show file name and enable scan button on file select
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    selectedFileName.textContent = `Selected: ${this.files[0].name}`;
+                    selectedFileName.style.display = 'block';
+                    scanBtn.style.display = 'inline-block';
+                } else {
+                    selectedFileName.style.display = 'none';
+                    scanBtn.style.display = 'none';
+                }
+            });
+            
+            // Handle drag and drop
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.borderColor = 'var(--primary-color)';
+                this.style.backgroundColor = 'rgba(13, 110, 253, 0.05)';
+            });
+            
+            dropZone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.style.borderColor = 'var(--border-color)';
+                this.style.backgroundColor = 'transparent';
+            });
+            
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.borderColor = 'var(--border-color)';
+                this.style.backgroundColor = 'transparent';
+                
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    selectedFileName.textContent = `Selected: ${e.dataTransfer.files[0].name}`;
+                    selectedFileName.style.display = 'block';
+                    scanBtn.style.display = 'inline-block';
+                }
+            });
+            
+            // Show loading overlay when form is submitted
+            uploadForm.addEventListener('submit', function() {
+                loadingOverlay.classList.add('active');
+            });
+        });
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const icon = document.querySelector('.theme-toggle i');
+            if (document.body.classList.contains('light-mode')) {
+                icon.classList.remove('bi-moon-stars');
+                icon.classList.add('bi-sun');
+            } else {
+                icon.classList.remove('bi-sun');
+                icon.classList.add('bi-moon-stars');
+            }
+        }
+
+        // Function to update directory changes
+        function updateDirectoryChanges() {
+            const container = document.getElementById('directoryChanges');
+            const lastCheckElement = document.getElementById('lastCheckTime');
+            
+            fetch('/api/directory-changes')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch directory changes');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Update last check time
+                    if (data.last_check) {
+                        lastCheckElement.textContent = `Last checked: ${data.last_check}`;
+                    }
+
+                    if (data.new_files.length === 0 && data.modified_files.length === 0) {
+                        container.innerHTML = '<p class="text-success mb-0">No recent file changes detected.</p>';
+                        return;
+                    }
+
+                    let html = '<div class="row">';
+                    
+                    // New files
+                    html += '<div class="col-md-6">';
+                    html += '<h6 class="border-bottom pb-2"><i class="bi bi-plus-circle me-2"></i>New Files</h6>';
+                    if (data.new_files.length > 0) {
+                        html += '<div class="table-responsive" style="max-height: 300px; overflow-y: auto;">';
+                        html += '<table class="table table-dark table-hover table-sm">';
+                        html += '<thead><tr><th>File</th><th>Size</th><th>Modified</th></tr></thead><tbody>';
+                        data.new_files.forEach(file => {
+                            html += `<tr>
+                                <td class="text-truncate" style="max-width: 200px;" title="${file.path}">${file.path}</td>
+                                <td>${(file.size / 1024).toFixed(2)} KB</td>
+                                <td>${file.modified}</td>
+                            </tr>`;
+                        });
+                        html += '</tbody></table></div>';
+                    } else {
+                        html += '<p class="text-secondary">No new files</p>';
+                    }
+                    html += '</div>';
+                    
+                    // Modified files
+                    html += '<div class="col-md-6">';
+                    html += '<h6 class="border-bottom pb-2"><i class="bi bi-pencil me-2"></i>Modified Files</h6>';
+                    if (data.modified_files.length > 0) {
+                        html += '<div class="table-responsive" style="max-height: 300px; overflow-y: auto;">';
+                        html += '<table class="table table-dark table-hover table-sm">';
+                        html += '<thead><tr><th>File</th><th>Size</th><th>Modified</th></tr></thead><tbody>';
+                        data.modified_files.forEach(file => {
+                            html += `<tr>
+                                <td class="text-truncate" style="max-width: 200px;" title="${file.path}">${file.path}</td>
+                                <td>${(file.size / 1024).toFixed(2)} KB</td>
+                                <td>${file.modified}</td>
+                            </tr>`;
+                        });
+                        html += '</tbody></table></div>';
+                    } else {
+                        html += '<p class="text-secondary">No modified files</p>';
+                    }
+                    html += '</div>';
+                    
+                    html += '</div>';
+                    container.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error fetching directory changes:', error);
+                    container.innerHTML = '<div class="alert alert-danger">Error loading directory changes. Please try again.</div>';
+                });
+        }
+
+        // Update directory changes every 30 seconds
+        setInterval(updateDirectoryChanges, 30000);
+
+        // Initial update
+        updateDirectoryChanges();
+    </script>
+</body>
+</html> 

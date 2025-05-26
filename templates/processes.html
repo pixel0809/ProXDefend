@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ProXDefend - Process Monitor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --dark-bg: #0d1117;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --text-primary: #ffffff;
+            --text-secondary: #8b949e;
+            --danger-color: #f85149;
+            --success-color: #238636;
+            --warning-color: #d29922;
+            --btn-outline-color: #ffffff;
+            --accent-color: #58a6ff;
+        }
+        
+        body { 
+            background-color: var(--dark-bg); 
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body.light-mode {
+    --dark-bg: #f8f9fa;
+    --card-bg: #ffffff;
+    --border-color: #dee2e6;
+    --text-primary: #212529;
+    --text-secondary: #495057;
+    --btn-outline-color: #212529;
+    --accent-color: #0d6efd;
+    color: var(--text-primary);
+}
+
+body.light-mode .card-body,
+body.light-mode .stats-number,
+body.light-mode p,
+body.light-mode td,
+body.light-mode .form-control,
+body.light-mode .stats-label {
+    color: var(--text-primary) !important;
+}
+
+body.light-mode .text-secondary {
+    color: var(--text-secondary) !important;
+}
+        
+        body.light-mode .lead,
+        body.light-mode .text-secondary,
+        body.light-mode .card-header,
+        body.light-mode .card-body {
+            color: #212529 !important;
+        }
+        
+        .header { 
+            margin: 1rem 0;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background-color: rgba(22, 27, 34, 0.8);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        body.light-mode .card-header {
+            background-color: rgba(248, 249, 250, 0.8);
+        }
+        
+        .table {
+            color: var(--text-primary);
+            margin-bottom: 0;
+        }
+        
+        .table-dark {
+            background-color: var(--card-bg);
+        }
+        
+        body.light-mode .table-dark {
+            background-color: var(--card-bg);
+        }
+        
+        .table > :not(caption) > * > * {
+            background-color: transparent;
+            border-bottom-color: var(--border-color);
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        body.light-mode .table-hover tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .badge {
+            font-weight: 500;
+            padding: 0.4em 0.8em;
+        }
+        
+        .suspicious { 
+            background-color: rgba(248, 81, 73, 0.1) !important; 
+        }
+        
+        body.light-mode .suspicious {
+            background-color: rgba(248, 81, 73, 0.05) !important;
+        }
+        
+        .stats-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color: var(--text-primary); /* Ensure readable text */
+}
+        
+        .stats-card .icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+        
+        .stats-card .value {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stats-card .label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .btn-outline-light {
+            color: var(--btn-outline-color);
+            border-color: var(--btn-outline-color);
+        }
+        
+        .btn-outline-light:hover {
+            background-color: var(--btn-outline-color);
+            color: var(--dark-bg);
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            z-index: 1000;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .text-info {
+            color: var(--accent-color) !important;
+        }
+        
+        .text-secondary {
+            color: var(--text-secondary) !important;
+        }
+        
+        .refresh-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .refresh-button:hover {
+            transform: scale(1.1);
+            background-color: #0b5ed7;
+        }
+        
+        .refresh-button i {
+            font-size: 1.2rem;
+        }
+        
+        .refresh-button.spinning i {
+            animation: spin 1s linear infinite;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(13, 17, 23, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--border-color);
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+        
+        .back-button:hover {
+            transform: scale(1.1);
+            color: var(--text-primary);
+        }
+        
+        .filter-buttons {
+            margin-bottom: 1rem;
+        }
+        
+        .filter-buttons .btn {
+            margin-right: 0.5rem;
+        }
+        
+        .process-row {
+            display: none;
+        }
+        
+        .process-row.visible {
+            display: table-row;
+        }
+        
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .search-box {
+            margin-bottom: 1rem;
+        }
+        
+        .search-box .form-control {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        .search-box .form-control:focus {
+            background-color: var(--card-bg);
+            border-color: var(--primary-color);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        /* Add styles for table cells to handle long content */
+        .table td {
+            max-width: 200px;
+            white-space: normal;
+            word-wrap: break-word;
+            vertical-align: top;
+        }
+        
+        /* Specific column widths */
+        .table th:nth-child(1), .table td:nth-child(1) {
+            width: 80px; /* PID column */
+        }
+        
+        .table th:nth-child(2), .table td:nth-child(2) {
+            width: 150px; /* Process Name column */
+        }
+        
+        .table th:nth-child(3), .table td:nth-child(3) {
+            width: 250px; /* Command Line column */
+        }
+        
+        .table th:nth-child(4), .table td:nth-child(4) {
+            width: 200px; /* Status column */
+        }
+        
+        .table th:nth-child(5), .table td:nth-child(5) {
+            width: 120px; /* VT Verdict column */
+        }
+        
+        .table th:nth-child(6), .table td:nth-child(6) {
+            width: 100px; /* Actions column */
+        }
+        
+        /* Style for suspicious process details */
+        .suspicious-details {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            background-color: rgba(248, 81, 73, 0.1);
+        }
+        
+        .suspicious-details ul {
+            margin-bottom: 0;
+        }
+        
+        /* Add this to your existing styles */
+        .progress {
+            position: relative;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .progress-bar {
+            position: relative;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Add this to your existing styles */
+        .percentage-value {
+            font-weight: bold;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            display: inline-block;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        /* Color coding for different percentage ranges */
+        .percentage-value[data-value^="0"] { color: var(--success-color); }
+        .percentage-value[data-value^="1"] { color: var(--success-color); }
+        .percentage-value[data-value^="2"] { color: var(--success-color); }
+        .percentage-value[data-value^="3"] { color: var(--success-color); }
+        .percentage-value[data-value^="4"] { color: var(--warning-color); }
+        .percentage-value[data-value^="5"] { color: var(--warning-color); }
+        .percentage-value[data-value^="6"] { color: var(--warning-color); }
+        .percentage-value[data-value^="7"] { color: var(--danger-color); }
+        .percentage-value[data-value^="8"] { color: var(--danger-color); }
+        .percentage-value[data-value^="9"] { color: var(--danger-color); }
+        .node {
+            cursor: pointer;
+        }
+        .node circle {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 1.5px;
+        }
+        .node text {
+            font: 10px sans-serif;
+            fill: var(--text-primary);
+        }
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 1.5px;
+        }
+        .process-tree-container {
+            width: 100%;
+            height: 500px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- Back Button -->
+    <a href="/" class="back-button" title="Back to Home">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+        <i class="bi bi-moon-stars"></i>
+    </button>
+    
+    <div class="container">
+        <div class="text-center header">
+            <h1 class="display-5 fw-bold text-info">🛡️ Process Monitor</h1>
+            <p class="lead text-secondary">Real-time Process Monitoring and Analysis</p>
+            <p class="text-info"><i class="bi bi-clock me-2"></i>System Uptime: {{ system_uptime }}</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="stats-number text-primary">{{ processes|length }}</div>
+                    <div class="stats-label">Total Processes</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="stats-number text-danger">{{ processes|selectattr('suspicious')|list|length }}</div>
+                    <div class="stats-label">Suspicious Processes</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="stats-number text-success">{{ processes|rejectattr('suspicious')|list|length }}</div>
+                    <div class="stats-label">Clean Processes</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Process Filter Buttons -->
+        <div class="filter-buttons">
+            <button class="btn btn-outline-primary active" data-filter="all">All Processes</button>
+            <button class="btn btn-outline-danger" data-filter="suspicious">Suspicious Only</button>
+            <button class="btn btn-outline-success" data-filter="clean">Clean Only</button>
+        </div>
+        
+        <!-- Search Box -->
+        <div class="search-box">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0">
+                    <i class="bi bi-search text-secondary"></i>
+                </span>
+                <input type="text" id="processSearch" class="form-control border-start-0" placeholder="Search processes...">
+            </div>
+        </div>
+
+        <!-- Process Table -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-list-ul me-2"></i>Running Processes</span>
+                <div>
+                    <a href="/export_processes_pdf" class="btn btn-sm btn-outline-light me-2">
+                        <i class="bi bi-file-pdf me-1"></i>Export PDF
+                    </a>
+                    <span class="badge bg-secondary">{{ processes|length }} processes</span>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>PID</th>
+                            <th>Process Name</th>
+                            <th>Command Line</th>
+                            <th>CPU %</th>
+                            <th>Memory %</th>
+                            <th>Threads</th>
+                            <th>Created</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for proc in processes %}
+                        <tr class="process-row {% if proc.suspicious %}suspicious{% endif %}" data-status="{% if proc.suspicious %}suspicious{% else %}clean{% endif %}">
+                            <td>{{ proc.pid }}</td>
+                            <td>{{ proc.name }}</td>
+                            <td>{{ proc.cmdline }}</td>
+                            <td>
+                                <span class="percentage-value">{{ "%.1f"|format(proc.cpu_percent) }}%</span>
+                            </td>
+                            <td>
+                                <span class="percentage-value">{{ "%.1f"|format(proc.memory_percent) }}%</span>
+                            </td>
+                            <td>{{ proc.num_threads }}</td>
+                            <td>{{ proc.create_time }}</td>
+                            <td>
+                                {% if proc.suspicious %}
+                                <span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Suspicious</span>
+                                <div class="suspicious-details">
+                                    <div class="small text-warning">
+                                        <strong>Fix:</strong> {{ proc.fix_suggestion }}
+                                    </div>
+                                </div>
+                                {% else %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Clean</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <form method="POST" action="/kill_process/{{ proc.pid }}" class="d-inline">
+                                        <button class="btn {% if proc.suspicious %}btn-danger{% else %}btn-outline-danger{% endif %} btn-sm" 
+                                                type="submit" 
+                                                onclick="return confirm('Are you sure you want to kill process {{ proc.name }} (PID: {{ proc.pid }})?')">
+                                            <i class="bi bi-x-circle me-1"></i>Kill
+                                        </button>
+                                    </form>
+                                    <button class="btn btn-outline-info btn-sm ms-1" 
+                                            onclick="showProcessDetails({{ proc.pid|tojson }})"
+                                            title="View Details">
+                                        <i class="bi bi-info-circle"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <button class="refresh-button" id="refreshButton" title="Refresh Process List">
+            <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        
+        <p class="text-end text-secondary mt-3">Click the refresh button to update the process list</p>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">CPU Usage</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="cpuChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Memory Usage</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="memoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Process Details Modal -->
+    <div class="modal fade" id="processDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title">Process Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Basic Information</h6>
+                            <table class="table table-sm table-dark">
+                                <tr>
+                                    <th>PID:</th>
+                                    <td id="detail-pid"></td>
+                                </tr>
+                                <tr>
+                                    <th>Name:</th>
+                                    <td id="detail-name"></td>
+                                </tr>
+                                <tr>
+                                    <th>Command Line:</th>
+                                    <td id="detail-cmdline"></td>
+                                </tr>
+                                <tr>
+                                    <th>Created:</th>
+                                    <td id="detail-created"></td>
+                                </tr>
+                                <tr>
+                                    <th>Parent PID:</th>
+                                    <td id="detail-ppid"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Resource Usage</h6>
+                            <table class="table table-sm table-dark">
+                                <tr>
+                                    <th>CPU Usage:</th>
+                                    <td id="detail-cpu"></td>
+                                </tr>
+                                <tr>
+                                    <th>Memory Usage:</th>
+                                    <td id="detail-memory"></td>
+                                </tr>
+                                <tr>
+                                    <th>Threads:</th>
+                                    <td id="detail-threads"></td>
+                                </tr>
+                                <tr>
+                                    <th>Status:</th>
+                                    <td id="detail-status"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Process Termination Modal -->
+    <div class="modal fade" id="terminateProcessModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title">Terminate Process</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Warning:</strong> Are you sure you want to terminate this process?
+                    </div>
+                    <div id="processDetails">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmTerminate">
+                        <i class="bi bi-x-octagon me-2"></i>Terminate Process
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Error</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-x-circle-fill me-2"></i>
+                        <span id="errorMessage"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const refreshButton = document.getElementById('refreshButton');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const processSearch = document.getElementById('processSearch');
+            
+            // Hide loading overlay initially
+            loadingOverlay.classList.remove('active');
+            
+            // Handle refresh button click
+            refreshButton.addEventListener('click', function() {
+                // Add spinning animation
+                refreshButton.classList.add('spinning');
+                loadingOverlay.classList.add('active');
+                
+                // Reload the page
+                window.location.reload();
+            });
+            
+            // Remove spinning animation when page loads
+            refreshButton.classList.remove('spinning');
+            
+            // Process filtering
+            const filterButtons = document.querySelectorAll('.filter-buttons .btn');
+            const processRows = document.querySelectorAll('.process-row');
+            
+            // Show all processes initially
+            processRows.forEach(row => {
+                row.classList.add('visible');
+            });
+            
+            // Add click event to filter buttons
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    const filter = this.getAttribute('data-filter');
+                    
+                    // Filter processes
+                    processRows.forEach(row => {
+                        if (filter === 'all') {
+                            row.classList.add('visible');
+                        } else {
+                            if (row.getAttribute('data-status') === filter) {
+                                row.classList.add('visible');
+                            } else {
+                                row.classList.remove('visible');
+                            }
+                        }
+                    });
+                });
+            });
+            
+            // Search functionality
+            processSearch.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                
+                processRows.forEach(row => {
+                    const processName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                    const cmdline = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                    const pid = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                    
+                    if (processName.includes(searchTerm) || cmdline.includes(searchTerm) || pid.includes(searchTerm)) {
+                        row.classList.add('visible');
+                    } else {
+                        row.classList.remove('visible');
+                    }
+                });
+            });
+
+            // Initialize percentage values with color coding
+            const percentageValues = document.querySelectorAll('.percentage-value');
+            percentageValues.forEach(value => {
+                const percentage = parseFloat(value.textContent);
+                value.setAttribute('data-value', Math.floor(percentage / 10));
+            });
+        });
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const icon = document.querySelector('.theme-toggle i');
+            if (document.body.classList.contains('light-mode')) {
+                icon.classList.remove('bi-moon-stars');
+                icon.classList.add('bi-sun');
+            } else {
+                icon.classList.remove('bi-sun');
+                icon.classList.add('bi-moon-stars');
+            }
+        }
+
+        // CPU Usage Chart
+        const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+        const cpuChart = new Chart(cpuCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'CPU Usage %',
+                    data: [],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: 'rgb(255, 255, 255)'
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `CPU Usage: ${context.parsed.y.toFixed(1)}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgb(255, 255, 255)',
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgb(255, 255, 255)',
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+
+        // Memory Usage Chart
+        const memoryCtx = document.getElementById('memoryChart').getContext('2d');
+        const memoryChart = new Chart(memoryCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Memory Usage %',
+                    data: [],
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: 'rgb(255, 255, 255)'
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `Memory Usage: ${context.parsed.y.toFixed(1)}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgb(255, 255, 255)',
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgb(255, 255, 255)',
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+
+        // Update charts every 2 seconds
+        function updateCharts() {
+            fetch('/process-metrics')
+                .then(response => response.json())
+                .then(data => {
+                    const timestamp = new Date().toLocaleTimeString();
+                    
+                    // Update CPU chart
+                    cpuChart.data.labels.push(timestamp);
+                    cpuChart.data.datasets[0].data.push(data.cpu_percent);
+                    
+                    // Keep only last 20 data points for CPU
+                    if (cpuChart.data.labels.length > 20) {
+                        cpuChart.data.labels.shift();
+                        cpuChart.data.datasets[0].data.shift();
+                    }
+                    
+                    // Update CPU color based on usage
+                    const cpuColor = data.cpu_percent > 80 ? 'rgb(255, 99, 132)' : 
+                                   data.cpu_percent > 60 ? 'rgb(255, 159, 64)' : 
+                                   'rgb(75, 192, 192)';
+                    cpuChart.data.datasets[0].borderColor = cpuColor;
+                    cpuChart.data.datasets[0].backgroundColor = cpuColor.replace('rgb', 'rgba').replace(')', ', 0.1)');
+                    
+                    cpuChart.update('none'); // Update without animation for better performance
+                    
+                    // Update Memory chart
+                    memoryChart.data.labels.push(timestamp);
+                    memoryChart.data.datasets[0].data.push(data.memory_percent);
+                    
+                    // Keep only last 20 data points for memory
+                    if (memoryChart.data.labels.length > 20) {
+                        memoryChart.data.labels.shift();
+                        memoryChart.data.datasets[0].data.shift();
+                    }
+                    
+                    // Update memory color based on usage
+                    const memoryColor = data.memory_percent > 80 ? 'rgb(255, 99, 132)' : 
+                                      data.memory_percent > 60 ? 'rgb(255, 159, 64)' : 
+                                      'rgb(75, 192, 192)';
+                    memoryChart.data.datasets[0].borderColor = memoryColor;
+                    memoryChart.data.datasets[0].backgroundColor = memoryColor.replace('rgb', 'rgba').replace(')', ', 0.1)');
+                    
+                    memoryChart.update('none'); // Update without animation for better performance
+                    
+                    // Update memory stats if the element exists
+                    const memoryStatsElement = document.getElementById('memoryStats');
+                    if (memoryStatsElement) {
+                        const totalGB = (data.memory_total / (1024 * 1024 * 1024)).toFixed(2);
+                        const usedGB = (data.memory_used / (1024 * 1024 * 1024)).toFixed(2);
+                        const freeGB = (data.memory_free / (1024 * 1024 * 1024)).toFixed(2);
+                        
+                        memoryStatsElement.innerHTML = `
+                            <div class="memory-stats">
+                                <div class="memory-bar">
+                                    <div class="memory-used" style="width: ${data.memory_percent}%"></div>
+                                </div>
+                                <div class="memory-details">
+                                    <div class="small text-secondary">Total: ${totalGB} GB</div>
+                                    <div class="small text-warning">Used: ${usedGB} GB (${data.memory_percent.toFixed(1)}%)</div>
+                                    <div class="small text-success">Free: ${freeGB} GB</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating charts:', error);
+                });
+        }
+
+        // Start updating charts immediately and then every 2 seconds
+        updateCharts();
+        const chartUpdateInterval = setInterval(updateCharts, 2000);
+
+        // Clean up interval when page is unloaded
+        window.addEventListener('unload', () => {
+            clearInterval(chartUpdateInterval);
+        });
+
+        // Store processes data for details modal
+        const processesData = {{ processes|tojson|safe }};
+
+        function showProcessDetails(pid) {
+            const process = processesData.find(p => p.pid === pid);
+            if (process) {
+                document.getElementById('detail-pid').textContent = process.pid;
+                document.getElementById('detail-name').textContent = process.name;
+                document.getElementById('detail-cmdline').textContent = process.cmdline;
+                document.getElementById('detail-created').textContent = process.create_time;
+                document.getElementById('detail-ppid').textContent = process.ppid;
+                document.getElementById('detail-cpu').textContent = `${process.cpu_percent.toFixed(1)}%`;
+                document.getElementById('detail-memory').textContent = `${process.memory_percent.toFixed(2)}%`;
+                document.getElementById('detail-threads').textContent = process.num_threads;
+                document.getElementById('detail-status').innerHTML = process.suspicious ? 
+                    '<span class="badge bg-danger">Suspicious</span>' : 
+                    '<span class="badge bg-success">Clean</span>';
+                
+                const modal = new bootstrap.Modal(document.getElementById('processDetailsModal'));
+                modal.show();
+            }
+        }
+
+        function terminateProcess(pid, processName) {
+            // Show confirmation modal with process details
+            const processDetails = document.getElementById('processDetails');
+            processDetails.innerHTML = `
+                <table class="table table-dark">
+                    <tr>
+                        <td><strong>Process Name:</strong></td>
+                        <td>${processName}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PID:</strong></td>
+                        <td>${pid}</td>
+                    </tr>
+                </table>
+            `;
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('terminateProcessModal'));
+            modal.show();
+            
+            // Handle confirmation
+            document.getElementById('confirmTerminate').onclick = function() {
+                // Show loading state
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Terminating...';
+                
+                fetch(`/kill_process/${pid}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        modal.hide();
+                        
+                        if (data.success) {
+                            // Show success notification
+                            showNotification('success', data.message);
+                            // Refresh the process list
+                            refreshProcessList();
+                        } else {
+                            // Show error modal
+                            showError(data.error);
+                        }
+                    })
+                    .catch(error => {
+                        modal.hide();
+                        showError('Failed to terminate process: ' + error.message);
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        this.disabled = false;
+                        this.innerHTML = '<i class="bi bi-x-octagon me-2"></i>Terminate Process';
+                    });
+            };
+        }
+
+        function showError(message) {
+            const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+            document.getElementById('errorMessage').textContent = message;
+            errorModal.show();
+        }
+
+        function showNotification(type, message) {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+            notification.style.zIndex = '9999';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(notification);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html> 

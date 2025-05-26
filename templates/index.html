@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProXDefend - System Monitoring & Security</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --border-color: #30363d;
+            --accent-color: #58a6ff;
+            --danger-color: #f85149;
+            --success-color: #3fb950;
+            --warning-color: #d29922;
+            --btn-outline-color: #ffffff;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        body.light-mode {
+            --bg-color: #f6f8fa;
+            --card-bg: #ffffff;
+            --text-primary: #24292f;
+            --text-secondary: #57606a;
+            --border-color: #d0d7de;
+            --accent-color: #0969da;
+            --danger-color: #cf222e;
+            --success-color: #116329;
+            --warning-color: #9a6700;
+            --btn-outline-color: #24292f;
+        }
+        
+        .header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            background-color: rgba(22, 27, 34, 0.8);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        body.light-mode .card-header {
+            background-color: rgba(248, 249, 250, 0.8);
+        }
+        
+        .table {
+            color: var(--text-primary);
+            margin-bottom: 0;
+        }
+        
+        .table-dark {
+            background-color: var(--card-bg);
+        }
+        
+        body.light-mode .table-dark {
+            background-color: var(--card-bg);
+        }
+        
+        .table > :not(caption) > * > * {
+            background-color: transparent;
+            border-bottom-color: var(--border-color);
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        body.light-mode .table-hover tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .hero-section {
+            padding: 4rem 0;
+            text-align: center;
+            background: linear-gradient(45deg, #0d1117, #161b22);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        body.light-mode .hero-section {
+            background: linear-gradient(45deg, #f6f8fa, #ffffff);
+            color: var(--text-primary);
+        }
+        
+        .feature-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 2rem;
+            height: 100%;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            color: var(--text-primary);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .suspicious {
+            background-color: rgba(248, 81, 73, 0.1);
+        }
+        
+        body.light-mode .suspicious {
+            background-color: rgba(207, 34, 46, 0.1);
+        }
+        
+        .btn-outline-light {
+            color: var(--btn-outline-color);
+            border-color: var(--btn-outline-color);
+        }
+        
+        body.light-mode .btn-outline-light {
+            color: var(--btn-outline-color);
+            border-color: var(--btn-outline-color);
+        }
+        
+        .btn-outline-light:hover {
+            background-color: var(--btn-outline-color);
+            color: var(--bg-color);
+        }
+        
+        body.light-mode .btn-outline-light:hover {
+            background-color: var(--btn-outline-color);
+            color: var(--bg-color);
+        }
+
+        .progress {
+            height: 0.5rem;
+            background-color: var(--border-color);
+        }
+
+        .progress-bar {
+            background-color: var(--accent-color);
+        }
+
+        /* Add form label color styling */
+        .form-label {
+            color: var(--text-primary);
+        }
+
+        /* Small text color */
+        .text-muted {
+            color: var(--text-secondary) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">ProXDefend</h1>
+                <div>
+                    <a href="/processes" class="btn btn-outline-light me-2">Processes</a>
+                    <a href="/network" class="btn btn-outline-light me-2">Network</a>
+                    <a href="/scanner" class="btn btn-outline-light">Scanner</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-section">
+        <div class="container">
+            <h1 class="display-4 mb-4">Welcome to ProXDefend</h1>
+            <p class="lead mb-4">Advanced system monitoring and security solution</p>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <a href="/processes" class="feature-card d-block">
+                        <div class="feature-icon">
+                            <i class="bi bi-diagram-3"></i>
+                        </div>
+                        <h3>Process Management</h3>
+                        <p>Monitor and manage running processes with detailed information</p>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="/network" class="feature-card d-block">
+                        <div class="feature-icon">
+                            <i class="bi bi-hdd-network"></i>
+                        </div>
+                        <h3>Network Monitoring</h3>
+                        <p>Track network connections and identify potential threats</p>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="/scanner" class="feature-card d-block">
+                        <div class="feature-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <h3>File Scanner</h3>
+                        <p>Upload and scan files for potential threats</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>System Health</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="systemHealth">
+                            <div class="mb-3">
+                                <label class="form-label">CPU Usage</label>
+                                <div class="progress">
+                                    <div class="progress-bar" id="cpuProgress" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <small class="text-muted" id="cpuText">Loading...</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Memory Usage</label>
+                                <div class="progress">
+                                    <div class="progress-bar" id="memoryProgress" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <small class="text-muted" id="memoryText">Loading...</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+        <i class="bi bi-moon-stars"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const icon = themeToggle.querySelector('i');
+            
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                icon.classList.remove('bi-moon-stars');
+                icon.classList.add('bi-sun');
+            }
+            
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('light-mode');
+                const isLightMode = document.body.classList.contains('light-mode');
+                
+                // Update icon
+                if (isLightMode) {
+                    icon.classList.remove('bi-moon-stars');
+                    icon.classList.add('bi-sun');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    icon.classList.remove('bi-sun');
+                    icon.classList.add('bi-moon-stars');
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+
+            // Function to update system health
+            function updateSystemHealth() {
+                fetch('/api/system-health')
+                    .then(response => response.json())
+                    .then(data => {
+                        const cpuProgress = document.getElementById('cpuProgress');
+                        const memoryProgress = document.getElementById('memoryProgress');
+                        const cpuText = document.getElementById('cpuText');
+                        const memoryText = document.getElementById('memoryText');
+                        
+                        // Update CPU usage
+                        const cpuPercent = data.cpu.percent;
+                        cpuProgress.style.width = `${cpuPercent}%`;
+                        cpuText.textContent = `${cpuPercent.toFixed(1)}%`;
+                        
+                        // Update memory usage
+                        const memoryPercent = data.memory.percent;
+                        memoryProgress.style.width = `${memoryPercent}%`;
+                        memoryText.textContent = `${memoryPercent.toFixed(1)}%`;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching system health:', error);
+                    });
+            }
+
+            // Initial update
+            updateSystemHealth();
+
+            // Update every 5 seconds
+            setInterval(updateSystemHealth, 5000);
+        });
+    </script>
+</body>
+</html> 

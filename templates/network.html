@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ProXDefend - Network Monitor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --dark-bg: #0d1117;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --text-primary: #ffffff;
+            --text-secondary: #8b949e;
+            --danger-color: #f85149;
+            --success-color: #238636;
+            --warning-color: #d29922;
+            --btn-outline-color: #ffffff;
+            --accent-color: #58a6ff;
+        }
+        
+        body { 
+            background-color: var(--dark-bg); 
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body.light-mode {
+    --dark-bg: #f8f9fa;
+    --card-bg: #ffffff;
+    --border-color: #dee2e6;
+    --text-primary: #212529;
+    --text-secondary: #495057;
+    --btn-outline-color: #212529;
+    --accent-color: #0d6efd;
+    color: var(--text-primary);
+}
+
+body.light-mode .card-body,
+body.light-mode .stats-number,
+body.light-mode p,
+body.light-mode td,
+body.light-mode .form-control,
+body.light-mode .stats-label {
+    color: var(--text-primary) !important;
+}
+
+body.light-mode .text-secondary {
+    color: var(--text-secondary) !important;
+}
+        
+        body.light-mode .lead,
+        body.light-mode .text-secondary,
+        body.light-mode .card-header,
+        body.light-mode .card-body {
+            color: #212529 !important;
+        }
+        
+        .header { 
+            margin: 1rem 0;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background-color: rgba(22, 27, 34, 0.8);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        body.light-mode .card-header {
+            background-color: rgba(248, 249, 250, 0.8);
+        }
+        
+        .table {
+            color: var(--text-primary);
+            margin-bottom: 0;
+        }
+        
+        .table-dark {
+            background-color: var(--card-bg);
+        }
+        
+        body.light-mode .table-dark {
+            background-color: var(--card-bg);
+        }
+        
+        .table > :not(caption) > * > * {
+            background-color: transparent;
+            border-bottom-color: var(--border-color);
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        body.light-mode .table-hover tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .badge {
+            font-weight: 500;
+            padding: 0.4em 0.8em;
+        }
+        
+        .suspicious { 
+            background-color: rgba(248, 81, 73, 0.1) !important; 
+        }
+        
+        body.light-mode .suspicious {
+            background-color: rgba(248, 81, 73, 0.05) !important;
+        }
+        
+        .stats-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color: var(--text-primary); /* Ensure readable text */
+}
+        
+        .stats-card .icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+        
+        .stats-card .value {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stats-card .label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .refresh-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .refresh-button:hover {
+            transform: scale(1.1);
+            background-color: #0b5ed7;
+        }
+        
+        .refresh-button i {
+            font-size: 1.2rem;
+        }
+        
+        .refresh-button.spinning i {
+            animation: spin 1s linear infinite;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(13, 17, 23, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--border-color);
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+        
+        .back-button:hover {
+            transform: scale(1.1);
+            color: var(--text-primary);
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            z-index: 1000;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        body.light-mode .theme-toggle i::before {
+            content: "\F1D1";
+        }
+        
+        .filter-buttons {
+            margin-bottom: 1rem;
+        }
+        
+        .filter-buttons .btn {
+            margin-right: 0.5rem;
+        }
+        
+        .connection-row {
+            display: none;
+        }
+        
+        .connection-row.visible {
+            display: table-row;
+        }
+        
+        .search-box {
+            margin-bottom: 1rem;
+        }
+        
+        .search-box .form-control {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        .search-box .form-control:focus {
+            background-color: var(--card-bg);
+            border-color: var(--primary-color);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        /* Style for suspicious connection details */
+        .suspicious-details {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            background-color: rgba(248, 81, 73, 0.1);
+        }
+        
+        .suspicious-details ul {
+            margin-bottom: 0;
+        }
+        
+        .btn-outline-light {
+            color: var(--btn-outline-color);
+            border-color: var(--btn-outline-color);
+        }
+        
+        body.light-mode .btn-outline-light {
+            color: var(--btn-outline-color);
+            border-color: var(--btn-outline-color);
+        }
+        
+        .btn-outline-light:hover {
+            background-color: var(--btn-outline-color);
+            color: var(--dark-bg);
+        }
+        
+        body.light-mode .btn-outline-light:hover {
+            background-color: var(--btn-outline-color);
+            color: var(--dark-bg);
+        }
+        
+        .text-info {
+            color: var(--accent-color) !important;
+        }
+        
+        body.light-mode .text-info {
+            color: var(--accent-color) !important;
+        }
+        
+        .text-secondary {
+            color: var(--text-secondary) !important;
+        }
+        
+        body.light-mode .text-secondary {
+            color: var(--text-secondary) !important;
+        }
+
+        /* New styles for network monitoring features */
+        .network-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .network-stat-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .network-stat-card .icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .network-stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .network-stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .speed-test-container {
+            margin-top: 2rem;
+        }
+
+        .progress {
+            height: 10px;
+            background-color: var(--border-color);
+        }
+
+        .progress-bar {
+            background-color: var(--accent-color);
+        }
+
+        .test-button {
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .speed-test-container label {
+            color: var(--text-primary);
+        }
+
+        .speed-test-container #download-speed,
+        .speed-test-container #upload-speed {
+            color: var(--text-primary);
+        }
+
+        .card-header h6 {
+            color: var(--text-primary);
+        }
+
+        .network-stat-card .label {
+            color: var(--text-primary);
+        }
+
+        .network-stat-card .value {
+            color: var(--text-primary);
+        }
+
+        .table th {
+            color: var(--text-primary);
+        }
+
+        .table td {
+            color: var(--text-primary);
+        }
+
+        /* Add styles for sticky header and scrollable table */
+        .table-responsive {
+            max-height: 600px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+        }
+        
+        .table-responsive::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .table-responsive::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .table-responsive::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 4px;
+        }
+        
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background-color: var(--text-secondary);
+        }
+
+        /* Ensure header stays visible while scrolling */
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background-color: var(--card-bg);
+            border-bottom: 2px solid var(--border-color);
+            z-index: 1;
+        }
+
+        /* Add shadow to header when scrolling */
+        .table thead th::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 2px;
+            background-color: var(--border-color);
+        }
+
+        /* Ensure table takes full width */
+        .table {
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        /* Add padding to table cells */
+        .table td, .table th {
+            padding: 0.75rem;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- Back Button -->
+    <a href="/" class="back-button" title="Back to Home">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+        <i class="bi bi-moon-stars"></i>
+    </button>
+    
+    <div class="container">
+        <div class="text-center header">
+            <h1 class="display-5 fw-bold text-info">🛡️ Network Monitor</h1>
+            <p class="lead text-secondary">Real-time Network Connection Monitoring</p>
+            <p class="text-info"><i class="bi bi-clock me-2"></i>System Uptime: {{ system_uptime }}</p>
+            <button onclick="downloadNetworkReport()" class="btn btn-outline-primary mt-2" id="downloadPdfBtn">
+                <i class="bi bi-file-pdf me-2"></i>Download Network Report
+            </button>
+        </div>
+
+        <!-- Network Monitoring Features -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="network-stats">
+                    <div class="network-stat-card">
+                        <i class="bi bi-wifi icon"></i>
+                        <div class="value" id="connection-type">Checking...</div>
+                        <div class="label">Connection Type</div>
+                    </div>
+                    <div class="network-stat-card">
+                        <i class="bi bi-speedometer2 icon"></i>
+                        <div class="value" id="network-speed">Checking...</div>
+                        <div class="label">Network Speed</div>
+                    </div>
+                    <div class="network-stat-card">
+                        <i class="bi bi-clock icon"></i>
+                        <div class="value" id="ping-time">Checking...</div>
+                        <div class="label">Ping Time</div>
+                    </div>
+                    <div class="network-stat-card">
+                        <i class="bi bi-globe icon"></i>
+                        <div class="value" id="ip-address">Checking...</div>
+                        <div class="label">IP Address</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Speed Test Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Network Speed Test</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="speed-test-container">
+                            <div class="mb-3">
+                                <label class="form-label">Download Speed</label>
+                                <div class="progress">
+                                    <div class="progress-bar" id="download-progress" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <div class="mt-2" id="download-speed">0 Mbps</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Upload Speed</label>
+                                <div class="progress">
+                                    <div class="progress-bar" id="upload-progress" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <div class="mt-2" id="upload-speed">0 Mbps</div>
+                            </div>
+                            <button class="btn btn-primary test-button" id="start-test">
+                                <i class="bi bi-play-fill"></i> Start Speed Test
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="stats-number text-primary">{{ connections|length }}</div>
+                    <div class="stats-label">Total Connections</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="stats-number text-danger">{{ connections|selectattr('suspicious')|list|length }}</div>
+                    <div class="stats-label">Suspicious Connections</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="stats-number text-success">{{ connections|rejectattr('suspicious')|list|length }}</div>
+                    <div class="stats-label">Clean Connections</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Filter Buttons -->
+        <div class="filter-buttons mb-3">
+            <button class="btn btn-outline-primary active" data-filter="all">All Connections</button>
+            <button class="btn btn-outline-danger" data-filter="suspicious">Suspicious Only</button>
+            <button class="btn btn-outline-success" data-filter="clean">Clean Only</button>
+        </div>
+        
+        <!-- Search Box -->
+        <div class="search-box mb-3">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0">
+                    <i class="bi bi-search text-secondary"></i>
+                </span>
+                <input type="text" id="connectionSearch" class="form-control border-start-0" placeholder="Search connections...">
+            </div>
+        </div>
+
+        <!-- Network Connections Card -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-hdd-network me-2"></i>Network Connections</h5>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-primary" onclick="exportNetworkPDF()">
+                        <i class="bi bi-file-pdf me-1"></i>Export PDF
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="refreshData()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>PID</th>
+                                <th>Process</th>
+                                <th>Local Address</th>
+                                <th>Remote Address</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for conn in connections %}
+                            <tr class="{% if conn.suspicious %}suspicious{% endif %}" data-status="{% if conn.suspicious %}suspicious{% else %}clean{% endif %}">
+                                <td>{{ conn.pid }}</td>
+                                <td>
+                                    {{ conn.process_name }}
+                                    {% if conn.suspicious %}
+                                    <i class="bi bi-exclamation-triangle-fill text-warning ms-1" title="Suspicious Process"></i>
+                                    {% endif %}
+                                </td>
+                                <td>{{ conn.laddr }}</td>
+                                <td>
+                                    {{ conn.raddr }}
+                                    {% if conn.suspicious %}
+                                    <i class="bi bi-exclamation-triangle-fill text-warning ms-1" title="Suspicious Connection"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {% if conn.status == 'ESTABLISHED' %}bg-success{% elif conn.status == 'LISTEN' %}bg-info{% else %}bg-secondary{% endif %}">
+                                        {{ conn.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-info" onclick="showConnectionDetails({{ conn.pid }})" title="View Details">
+                                            <i class="bi bi-info-circle"></i>
+                                        </button>
+                                        {% if conn.suspicious %}
+                                        <button class="btn btn-sm btn-outline-danger" onclick="blockConnection({{ conn.pid }})" title="Block Connection">
+                                            <i class="bi bi-shield-x"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Traffic Analysis Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Network Traffic Analysis</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="stats-card">
+                            <div class="icon">
+                                <i class="bi bi-arrow-up-circle"></i>
+                            </div>
+                            <div class="value" id="uploadRate">0 KB/s</div>
+                            <div class="label">Upload Rate</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stats-card">
+                            <div class="icon">
+                                <i class="bi bi-arrow-down-circle"></i>
+                            </div>
+                            <div class="value" id="downloadRate">0 KB/s</div>
+                            <div class="label">Download Rate</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Interfaces Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-ethernet me-2"></i>Network Interfaces</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover" id="interfacesTable">
+                        <thead>
+                            <tr>
+                                <th>Interface</th>
+                                <th>MAC Address</th>
+                                <th>Status</th>
+                                <th>IP Addresses</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Socket Changes Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Socket Changes</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>New Sockets</h6>
+                        <div id="newSockets" class="list-group">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Closed Sockets</h6>
+                        <div id="closedSockets" class="list-group">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Traffic Anomalies Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Traffic Anomalies</h5>
+            </div>
+            <div class="card-body">
+                <div id="anomaliesList">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Details Modal -->
+        <div class="modal fade" id="connectionDetailsModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content bg-dark">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Connection Details</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="connectionDetails">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const refreshButton = document.getElementById('refreshButton');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const connectionSearch = document.getElementById('connectionSearch');
+            
+            // Hide loading overlay initially
+            loadingOverlay.classList.remove('active');
+            
+            // Handle refresh button click
+            if (refreshButton) {
+                refreshButton.addEventListener('click', function() {
+                    // Add spinning animation
+                    refreshButton.classList.add('spinning');
+                    loadingOverlay.classList.add('active');
+                    
+                    // Reload the page
+                    window.location.reload();
+                });
+                
+                // Remove spinning animation when page loads
+                refreshButton.classList.remove('spinning');
+            }
+            
+            // Connection filtering
+            const filterButtons = document.querySelectorAll('.filter-buttons .btn');
+            const connectionRows = document.querySelectorAll('tbody tr');
+            
+            // Function to update row visibility based on filter and search
+            function updateRowVisibility() {
+                const searchTerm = connectionSearch.value.toLowerCase();
+                const activeFilter = document.querySelector('.filter-buttons .btn.active').getAttribute('data-filter');
+                
+                connectionRows.forEach(row => {
+                    const processName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                    const laddr = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                    const raddr = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                    const pid = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                    const rowStatus = row.getAttribute('data-status');
+                    
+                    // Check if row matches the filter
+                    const matchesFilter = activeFilter === 'all' || rowStatus === activeFilter;
+                    
+                    // Check if row matches the search term
+                    const matchesSearch = searchTerm === '' || 
+                        processName.includes(searchTerm) || 
+                        laddr.includes(searchTerm) || 
+                        raddr.includes(searchTerm) || 
+                        pid.includes(searchTerm);
+                    
+                    // Show row only if it matches both filter and search
+                    row.style.display = (matchesFilter && matchesSearch) ? 'table-row' : 'none';
+                });
+            }
+            
+            // Add click event to filter buttons
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Update row visibility
+                    updateRowVisibility();
+                });
+            });
+            
+            // Search functionality
+            connectionSearch.addEventListener('input', updateRowVisibility);
+            
+            // Initial visibility update
+            updateRowVisibility();
+        });
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const icon = document.querySelector('.theme-toggle i');
+            if (document.body.classList.contains('light-mode')) {
+                icon.classList.remove('bi-moon-stars');
+                icon.classList.add('bi-sun');
+            } else {
+                icon.classList.remove('bi-sun');
+                icon.classList.add('bi-moon-stars');
+            }
+        }
+
+        // Network Information API
+        function updateNetworkInfo() {
+            if ('connection' in navigator) {
+                const connection = navigator.connection;
+                const connectionType = connection.effectiveType || 'Unknown';
+                const downlink = connection.downlink || 'Unknown';
+                document.getElementById('connection-type').textContent = connectionType;
+                document.getElementById('network-speed').textContent = `${downlink} Mbps`;
+            } else {
+                document.getElementById('connection-type').textContent = 'Not Available';
+                document.getElementById('network-speed').textContent = 'Not Available';
+            }
+        }
+
+        // Get IP Address for Wireless LAN adapter
+        function getIPAddress() {
+            // First try WebRTC method
+            const pc = new RTCPeerConnection({
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' }
+                ]
+            });
+
+            pc.createDataChannel('');
+            pc.createOffer()
+                .then(offer => pc.setLocalDescription(offer))
+                .catch(err => {
+                    console.error('Error creating offer:', err);
+                });
+
+            pc.onicecandidate = ice => {
+                if (!ice.candidate) return;
+                
+                const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3})/;
+                const match = ipRegex.exec(ice.candidate.candidate);
+                
+                if (match) {
+                    const ip = match[1];
+                    // Check if it matches the specific Wireless LAN IP
+                    if (ip === '192.168.137.1') {
+                        document.getElementById('ip-address').textContent = ip;
+                        pc.close();
+                    }
+                }
+            };
+
+            // Get local IP from server
+            fetch('/local-ip')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ip && data.ip !== 'Not Available') {
+                        document.getElementById('ip-address').textContent = data.ip;
+                    } else if (document.getElementById('ip-address').textContent === 'Checking...') {
+                        document.getElementById('ip-address').textContent = 'IP Not Found';
+                    }
+                })
+                .catch(() => {
+                    if (document.getElementById('ip-address').textContent === 'Checking...') {
+                        document.getElementById('ip-address').textContent = 'IP Not Found';
+                    }
+                });
+
+            // Set timeout
+            setTimeout(() => {
+                if (document.getElementById('ip-address').textContent === 'Checking...') {
+                    document.getElementById('ip-address').textContent = 'IP Not Found';
+                }
+                pc.close();
+            }, 5000);
+        }
+
+        // Ping Test with retry
+        function performPingTest() {
+            const start = performance.now();
+            fetch('/ping-test')
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const end = performance.now();
+                    const pingTime = Math.round(end - start);
+                    document.getElementById('ping-time').textContent = `${pingTime} ms`;
+                })
+                .catch(() => {
+                    // Retry once if failed
+                    setTimeout(() => {
+                        const retryStart = performance.now();
+                        fetch('/ping-test')
+                            .then(response => {
+                                if (!response.ok) throw new Error('Network response was not ok');
+                                const end = performance.now();
+                                const pingTime = Math.round(end - retryStart);
+                                document.getElementById('ping-time').textContent = `${pingTime} ms`;
+                            })
+                            .catch(() => {
+                                document.getElementById('ping-time').textContent = 'Failed';
+                            });
+                    }, 1000);
+                });
+        }
+
+        // Speed Test with progress updates
+        function performSpeedTest() {
+            const downloadProgress = document.getElementById('download-progress');
+            const uploadProgress = document.getElementById('upload-progress');
+            const downloadSpeed = document.getElementById('download-speed');
+            const uploadSpeed = document.getElementById('upload-speed');
+            const testButton = document.getElementById('start-test');
+
+            // Reset UI
+            downloadProgress.style.width = '0%';
+            uploadProgress.style.width = '0%';
+            downloadSpeed.textContent = 'Testing...';
+            uploadSpeed.textContent = 'Testing...';
+            testButton.disabled = true;
+            testButton.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Testing...';
+
+            // Download test
+            const startTime = performance.now();
+            let loadedBytes = 0;
+            const totalBytes = 1024 * 1024; // 1MB
+
+            fetch('/speed-test')
+                .then(response => {
+                    const reader = response.body.getReader();
+                    const stream = new ReadableStream({
+                        start(controller) {
+                            function push() {
+                                reader.read().then(({ done, value }) => {
+                                    if (done) {
+                                        controller.close();
+                                        return;
+                                    }
+                                    loadedBytes += value.length;
+                                    const progress = (loadedBytes / totalBytes) * 100;
+                                    downloadProgress.style.width = `${progress}%`;
+                                    controller.enqueue(value);
+                                    push();
+                                });
+                            }
+                            push();
+                        }
+                    });
+                    return new Response(stream);
+                })
+                .then(response => response.blob())
+                .then(blob => {
+                    const endTime = performance.now();
+                    const duration = (endTime - startTime) / 1000; // seconds
+                    const size = blob.size / (1024 * 1024); // MB
+                    const speed = (size / duration).toFixed(2);
+                    downloadProgress.style.width = '100%';
+                    downloadSpeed.textContent = `${speed} Mbps`;
+                    
+                    // Upload test
+                    const formData = new FormData();
+                    const testFile = new Blob(['0'.repeat(1024 * 1024)]); // 1MB file
+                    formData.append('file', testFile);
+                    
+                    const uploadStart = performance.now();
+                    let uploadedBytes = 0;
+                    
+                    fetch('/upload-test', {
+                        method: 'POST',
+                        body: formData,
+                        onUploadProgress: (progressEvent) => {
+                            uploadedBytes = progressEvent.loaded;
+                            const progress = (uploadedBytes / totalBytes) * 100;
+                            uploadProgress.style.width = `${progress}%`;
+                        }
+                    })
+                    .then(() => {
+                        const uploadEnd = performance.now();
+                        const uploadDuration = (uploadEnd - uploadStart) / 1000;
+                        const uploadSize = 1; // MB
+                        const uploadSpeedValue = (uploadSize / uploadDuration).toFixed(2);
+                        uploadProgress.style.width = '100%';
+                        uploadSpeed.textContent = `${uploadSpeedValue} Mbps`;
+                    })
+                    .catch(error => {
+                        console.error('Upload test failed:', error);
+                        uploadSpeed.textContent = 'Failed';
+                    })
+                    .finally(() => {
+                        testButton.disabled = false;
+                        testButton.innerHTML = '<i class="bi bi-play-fill"></i> Start Speed Test';
+                    });
+                })
+                .catch(error => {
+                    console.error('Download test failed:', error);
+                    downloadSpeed.textContent = 'Failed';
+                    testButton.disabled = false;
+                    testButton.innerHTML = '<i class="bi bi-play-fill"></i> Start Speed Test';
+                });
+        }
+
+        // Initialize all network monitoring features
+        document.addEventListener('DOMContentLoaded', () => {
+            // Update network info immediately
+            updateNetworkInfo();
+            
+            // Get IP address
+            getIPAddress();
+            
+            // Run ping test
+            performPingTest();
+            
+            // Set up connection change listener
+            if ('connection' in navigator) {
+                navigator.connection.addEventListener('change', updateNetworkInfo);
+            }
+
+            // Set up speed test button
+            const startTestButton = document.getElementById('start-test');
+            if (startTestButton) {
+                startTestButton.addEventListener('click', performSpeedTest);
+            }
+
+            // Update network info every 30 seconds
+            setInterval(updateNetworkInfo, 30000);
+            
+            // Run ping test every minute
+            setInterval(performPingTest, 60000);
+        });
+
+        // Function to update network interfaces
+        function updateNetworkInterfaces() {
+            fetch('/api/network-interfaces')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.querySelector('#interfacesTable tbody');
+                    tbody.innerHTML = '';
+                    data.forEach(interface => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${interface.name}</td>
+                            <td>${interface.mac || 'N/A'}</td>
+                            <td>
+                                <span class="badge ${interface.status === 'up' ? 'bg-success' : 'bg-danger'}">
+                                    ${interface.status}
+                                </span>
+                            </td>
+                            <td>${interface.addresses.map(addr => 
+                                `${addr.address} (${addr.family})`
+                            ).join('<br>')}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Function to update socket changes
+        function updateSocketChanges() {
+            fetch('/api/socket-changes')
+                .then(response => response.json())
+                .then(data => {
+                    const newSocketsDiv = document.getElementById('newSockets');
+                    const closedSocketsDiv = document.getElementById('closedSockets');
+                    
+                    newSocketsDiv.innerHTML = data.new_sockets.map(socket => `
+                        <div class="list-group-item bg-dark text-light">
+                            <div class="d-flex justify-content-between">
+                                <small>${socket.local_addr} → ${socket.remote_addr}</small>
+                                <span class="badge bg-info">${socket.status}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    closedSocketsDiv.innerHTML = data.closed_sockets.map(socket => `
+                        <div class="list-group-item bg-dark text-light">
+                            <small>${socket}</small>
+                        </div>
+                    `).join('');
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Function to update traffic anomalies
+        function updateTrafficAnomalies() {
+            fetch('/api/traffic-anomalies')
+                .then(response => response.json())
+                .then(data => {
+                    const anomaliesDiv = document.getElementById('anomaliesList');
+                    if (data.anomaly) {
+                        anomaliesDiv.innerHTML = `
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                ${data.anomaly_type}
+                                <br>
+                                <small>Upload Rate: ${formatBytes(data.send_rate)}/s</small>
+                                <br>
+                                <small>Download Rate: ${formatBytes(data.recv_rate)}/s</small>
+                            </div>
+                        `;
+                    } else {
+                        anomaliesDiv.innerHTML = `
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                No traffic anomalies detected
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Update all network information every 5 seconds
+        setInterval(() => {
+            updateNetworkInterfaces();
+            updateSocketChanges();
+            updateTrafficAnomalies();
+        }, 5000);
+
+        // Initial update
+        updateNetworkInterfaces();
+        updateSocketChanges();
+        updateTrafficAnomalies();
+
+        // Add PDF download handler
+        function downloadNetworkReport() {
+            const button = document.getElementById('downloadPdfBtn');
+            button.disabled = true;
+            button.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Generating PDF...';
+            
+            fetch('/export_network_pdf')
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Failed to generate PDF');
+                        });
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    if (blob.size === 0) {
+                        throw new Error('Generated PDF is empty');
+                    }
+                    
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `network_monitor_report_${new Date().toISOString().slice(0,19).replace(/[:]/g, '')}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Clean up
+                    setTimeout(() => {
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    }, 100);
+                })
+                .catch(error => {
+                    console.error('Error downloading PDF:', error);
+                    alert(error.message || 'Failed to download PDF report. Please try again.');
+                })
+                .finally(() => {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="bi bi-file-pdf me-2"></i>Download Network Report';
+                });
+        }
+
+        // Network connection action handlers
+        function showConnectionDetails(pid) {
+            fetch(`/api/connection-details/${pid}`)
+                .then(response => response.json())
+                .then(data => {
+                    const detailsHtml = `
+                        <div class="mb-3">
+                            <strong>Process Path:</strong> ${data.process_path || 'N/A'}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Start Time:</strong> ${data.start_time || 'N/A'}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Protocol:</strong> ${data.protocol || 'N/A'}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Bytes Sent:</strong> ${formatBytes(data.bytes_sent) || 'N/A'}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Bytes Received:</strong> ${formatBytes(data.bytes_recv) || 'N/A'}
+                        </div>
+                    `;
+                    document.getElementById('connectionDetails').innerHTML = detailsHtml;
+                    new bootstrap.Modal(document.getElementById('connectionDetailsModal')).show();
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function blockConnection(pid) {
+            if (confirm('Are you sure you want to block this connection?')) {
+                fetch(`/api/block-connection/${pid}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Connection blocked successfully');
+                            refreshData();
+                        } else {
+                            alert('Failed to block connection: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Failed to block connection');
+                    });
+            }
+        }
+
+        function exportNetworkPDF() {
+            window.location.href = '/export_network_pdf';
+        }
+
+        // Helper function to format bytes
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html> 
